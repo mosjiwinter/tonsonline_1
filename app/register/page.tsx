@@ -1,81 +1,66 @@
-'use client'; // ← สำคัญมาก
+
+
+'use client';
 
 import { useEffect, useState } from 'react';
 import liff from '@line/liff';
 
 export default function RegisterPage() {
   const [profile, setProfile] = useState<any>(null);
-  const [referrer, setReferrer] = useState<string>('');
+  const [referrer, setReferrer] = useState('');
 
   useEffect(() => {
-    const initLiff = async () => {
-      try {
-        const ref = new URLSearchParams(window.location.search).get('ref');
-        if (ref) setReferrer(ref);
+    const init = async () => {
+      await liff.init({ liffId: '2007552712-Ml60zkVe' });
+      if (!liff.isLoggedIn()) liff.login();
 
-        await liff.init({ liffId: '2007552712-Ml60zkVe' });
-        if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
-        }
-        const userProfile = await liff.getProfile();
-        setProfile(userProfile);
-      } catch (error) {
-        console.error('LIFF init error', error);
-      }
+      const p = await liff.getProfile();
+      setProfile(p);
+
+      const url = new URL(window.location.href);
+      const ref = url.searchParams.get('ref') || '';
+      setReferrer(ref);
     };
-    initLiff();
+    init();
   }, []);
 
-   if (!profile) return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center'
-    }}>
-      <svg 
-        width="40" 
-        height="40" 
-        viewBox="0 0 24 24"
-        style={{
-          animation: 'spin 1s linear infinite'
-        }}
-      >
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-        <circle
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="#666"
-          strokeWidth="2"
-          fill="none"
-          strokeDasharray="32"
-          strokeLinecap="round"
-        />
-      </svg>
-    </div>
-  );
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+
+    const data = {
+      name: form.name.value,
+      phone: form.phone.value,
+      referrer,
+      userId: profile?.userId,
+    };
+
+    await fetch('https://script.google.com/macros/s/AKfycby-gCj8HXTHCykYipyN4WAMQ_tD04GdHkOJXeK3cDJ1GfEQjXo1wgH5Q-otlDFpNMYA_A/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    alert('ลงทะเบียนสำเร็จ!');
+    form.reset();
+  };
 
   return (
-    <main style={{ maxWidth: 400, margin: '0 auto' }}>
+    <div style={{ padding: 20 }}>
       <h2>ลงทะเบียน</h2>
-      <p>สวัสดี {profile.displayName}</p>
-      <form>
-        <label>ชื่อ-นามสกุล</label>
-        <input name="name" required />
+      {profile && (
+        <div>
+          <p><strong>LINE Display Name:</strong> {profile.displayName}</p>
+          <p><strong>LINE User ID:</strong> {profile.userId}</p>
+        </div>
+      )}
+      <p><strong>รหัสผู้แนะนำ:</strong> {referrer}</p>
 
-        <label>เบอร์โทร</label>
-        <input name="phone" required />
-
-        <label>ผู้แนะนำ</label>
-        <input value={referrer} readOnly name="referrer" />
+      <form onSubmit={handleSubmit}>
+        <input name="name" placeholder="ชื่อ-สกุล" required />
+        <input name="phone" placeholder="เบอร์โทร" required />
+        <button type="submit">ลงทะเบียน</button>
       </form>
-    </main>
+    </div>
   );
 }

@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -46,20 +44,81 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>ลงทะเบียน</h2>
+    <div style={{
+      maxWidth: '500px',
+      margin: '0 auto',
+      padding: '20px',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      <h2 style={{
+        fontSize: '24px',
+        textAlign: 'center',
+        color: '#333',
+        marginBottom: '24px'
+      }}>ลงทะเบียน</h2>
+
       {profile && (
-        <div>
-          <p><strong>LINE Display Name:</strong> {profile.displayName}</p>
-          <p><strong>LINE User ID:</strong> {profile.userId}</p>
+        <div style={{
+          background: '#f5f5f5',
+          padding: '15px',
+          borderRadius: '8px',
+          marginBottom: '20px'
+        }}>
+          <p style={{ margin: '8px 0' }}><strong>LINE Display Name:</strong> {profile.displayName}</p>
+          <p style={{ margin: '8px 0' }}><strong>LINE User ID:</strong> {profile.userId}</p>
         </div>
       )}
-      <p><strong>รหัสผู้แนะนำ:</strong> {referrer}</p>
 
-      <form onSubmit={handleSubmit}>
-        <input name="name" placeholder="ชื่อ-สกุล" required />
-        <input name="phone" placeholder="เบอร์โทร" required />
-        <button type="submit">ลงทะเบียน</button>
+      <p style={{
+        background: '#e8f4fd',
+        padding: '12px',
+        borderRadius: '8px',
+        marginBottom: '20px'
+      }}><strong>รหัสผู้แนะนำ:</strong> {referrer}</p>
+
+      <form onSubmit={handleSubmit} style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <input
+          name="name"
+          placeholder="ชื่อ-สกุล"
+          required
+          style={{
+            padding: '12px',
+            borderRadius: '8px',
+            border: '1px solid #ddd',
+            fontSize: '16px'
+          }}
+        />
+        <input
+          name="phone"
+          placeholder="เบอร์โทร"
+          required
+          style={{
+            padding: '12px',
+            borderRadius: '8px',
+            border: '1px solid #ddd',
+            fontSize: '16px'
+          }}
+        />
+        <button
+          type="submit"
+          style={{
+            padding: '14px',
+            backgroundColor: '#00B900',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s'
+          }}
+        >
+          ลงทะเบียน
+        </button>
       </form>
     </div>
   );

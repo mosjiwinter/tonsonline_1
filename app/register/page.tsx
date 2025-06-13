@@ -1,8 +1,12 @@
+// RegisterPage.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import liff from '@line/liff';
-import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import dynamic from 'next/dynamic';
+
+// ⭐ โหลด LeafletMap แบบ dynamic (ป้องกัน SSR error)
+const Map = dynamic(() => import('./LeafletMap'), { ssr: false });
 
 interface ProfilePlus {
   phoneNumber?: string;
@@ -18,10 +22,6 @@ export default function RegisterPage() {
   const [storeImage, setStoreImage] = useState<File | null>(null);
   const [idCardImage, setIdCardImage] = useState<File | null>(null);
   const [message, setMessage] = useState('');
-
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: 'YOUR_GOOGLE_MAPS_API_KEY', // 🔑 เปลี่ยนเป็น API Key ของคุณ
-  });
 
   useEffect(() => {
     const init = async () => {
@@ -100,6 +100,7 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <input placeholder="ชื่อร้านค้า" value={storeName} onChange={e => setStoreName(e.target.value)} required />
         <input placeholder="ที่อยู่จัดส่ง" value={address} onChange={e => setAddress(e.target.value)} required />
+
         <div>
           <input
             placeholder="เบอร์โทร"
@@ -114,32 +115,7 @@ export default function RegisterPage() {
           <button type="button" onClick={getCurrentLocation}>📍 ใช้ GPS ปัจจุบัน</button>
         </div>
 
-        {isLoaded && (
-          <div style={{ height: 300 }}>
-            <GoogleMap
-              mapContainerStyle={{ width: '100%', height: '100%' }}
-              center={latLng || { lat: 13.7563, lng: 100.5018 }}
-              zoom={latLng ? 16 : 6}
-              onClick={(e) => {
-                if (e.latLng) {
-                  setLatLng({ lat: e.latLng.lat(), lng: e.latLng.lng() });
-                }
-              }}
-            >
-              {latLng && (
-                <Marker
-                  position={latLng}
-                  draggable
-                  onDragEnd={(e) => {
-                    if (e.latLng) {
-                      setLatLng({ lat: e.latLng.lat(), lng: e.latLng.lng() });
-                    }
-                  }}
-                />
-              )}
-            </GoogleMap>
-          </div>
-        )}
+        <Map latLng={latLng} setLatLng={setLatLng} />
 
         {latLng && <p>📌 ตำแหน่ง: {latLng.lat}, {latLng.lng}</p>}
 

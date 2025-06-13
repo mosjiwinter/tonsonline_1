@@ -1,5 +1,6 @@
 'use client';
 
+import { notFound } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import liff from '@line/liff';
 import QRCode from 'qrcode';
@@ -10,16 +11,30 @@ export default function StaffPage() {
 
   useEffect(() => {
     const init = async () => {
-      await liff.init({ liffId: '2007552712-Ml60zkVe' });
-      if (!liff.isLoggedIn()) liff.login();
+      try {
+        await liff.init({ liffId: '2007552712-Ml60zkVe' });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
 
-      const p = await liff.getProfile();
-      setProfile(p);
+        const p = await liff.getProfile();
+        // เช็คว่าเป็น staff หรือไม่ (ตัวอย่างเช็คจาก userId)
+        if (!isStaff(p.userId)) {
+          notFound(); // จะ redirect ไปหน้า 404
+          return;
+        }
 
-      // สร้าง URL สำหรับลูกค้า
-      const registerUrl = `https://liff.line.me/2007552712-Ml60zkVe/register?ref=${p.userId}`;
-      const qr = await QRCode.toDataURL(registerUrl);
-      setQrImage(qr);
+        setProfile(p);
+
+        // สร้าง URL สำหรับลูกค้า
+        const registerUrl = `https://liff.line.me/2007552712-Ml60zkVe/register?ref=${p.userId}`;
+        const qr = await QRCode.toDataURL(registerUrl);
+        setQrImage(qr);
+      } catch (err) {
+        console.error('Error:', err);
+        notFound();
+      }
     };
     init();
   }, []);
@@ -37,4 +52,14 @@ export default function StaffPage() {
       )}
     </div>
   );
+}
+
+// ฟังก์ชันเช็คว่าเป็น staff
+function isStaff(userId: string) {
+  // ตัวอย่าง: เช็คจาก userId ที่อนุญาต
+  const allowedStaffIds = [
+    'U1234567890abcdef', // แทนที่ด้วย userId ของ staff จริงๆ
+    // เพิ่ม userId อื่นๆ ที่อนุญาต
+  ];
+  return allowedStaffIds.includes(userId);
 }

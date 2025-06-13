@@ -10,6 +10,12 @@ export default function StaffPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    const isLoggedIn = localStorage.getItem('isStaffLoggedIn');
+    if (!isLoggedIn) {
+      window.location.href = '/login';  // ถ้ายังไม่ login ให้ไปหน้า login ก่อน
+      return;
+    }
+
     const init = async () => {
       try {
         await liff.init({ liffId: '2007552712-Ml60zkVe' });
@@ -19,7 +25,7 @@ export default function StaffPage() {
         }
 
         const p = await liff.getProfile();
-        console.log('LINE USER ID:', p.userId); // 👉 สำคัญ: copy userId ไปใส่ allowedStaffIds ด้านล่าง
+        console.log('LINE USER ID:', p.userId);
 
         if (!isStaff(p.userId)) {
           setErrorMessage('คุณไม่มีสิทธิ์ใช้งานหน้านี้');
@@ -28,7 +34,6 @@ export default function StaffPage() {
 
         setProfile(p);
 
-        // สร้างลิงก์ลงทะเบียนที่แนบ ref
         const registerUrl = `https://liff.line.me/2007552712-Ml60zkVe/register?ref=${p.userId}`;
         const qr = await QRCode.toDataURL(registerUrl);
         setQrImage(qr);
@@ -73,10 +78,9 @@ export default function StaffPage() {
   );
 }
 
-// ✅ เพิ่ม userId ที่ได้รับจาก console ตรงนี้
 function isStaff(userId: string) {
   const allowedStaffIds = [
-    'U6bb4012907c8d56f3ab4c9615f0bbc7b', // <--- ใส่ LINE userId ของพนักงานที่ได้รับอนุญาต
+    'U6bb4012907c8d56f3ab4c9615f0bbc7b', // ใส่ LINE userId ที่อนุญาต
     'Uyyyyyyyyyyyyyyyyyyyyy',
   ];
   return allowedStaffIds.includes(userId);

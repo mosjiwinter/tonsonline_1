@@ -16,6 +16,8 @@ export default function StaffPage() {
       return;
     }
 
+    
+
     const init = async () => {
       try {
         await liff.init({ liffId: '2007552712-Ml60zkVe' });

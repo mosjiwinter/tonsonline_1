@@ -76,7 +76,7 @@ export default function StaffPage() {
 // ✅ เพิ่ม userId ที่ได้รับจาก console ตรงนี้
 function isStaff(userId: string) {
   const allowedStaffIds = [
-    'Uxxxxxxxxxxxxxxxxxxxxxx', // <--- ใส่ LINE userId ของพนักงานที่ได้รับอนุญาต
+    'U6bb4012907c8d56f3ab4c9615f0bbc7b', // <--- ใส่ LINE userId ของพนักงานที่ได้รับอนุญาต
     'Uyyyyyyyyyyyyyyyyyyyyy',
   ];
   return allowedStaffIds.includes(userId);

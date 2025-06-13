@@ -3,185 +3,125 @@
 import { useEffect, useState } from 'react';
 import liff from '@line/liff';
 
-// Add interface for ProfilePlus
-interface ProfilePlus {
-  email?: string;
-  phoneNumber?: string;
-}
-
 export default function RegisterPage() {
-  const [profile, setProfile] = useState<any>(null);
-  const [referrer, setReferrer] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [name, setName] = useState('');
+  const [address, setAddress] = useState('');
+  const [latLng, setLatLng] = useState<{ lat: number; lng: number } | null>(null);
+  const [storeImage, setStoreImage] = useState<File | null>(null);
+  const [idCardImage, setIdCardImage] = useState<File | null>(null);
+  const [storeImagePreview, setStoreImagePreview] = useState<string | null>(null);
+  const [idCardPreview, setIdCardPreview] = useState<string | null>(null);
+  const [userId, setUserId] = useState('');
+  const [referrer, setReferrer] = useState<string | null>(null);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const init = async () => {
-      await liff.init({ liffId: '2007552712-Ml60zkVe' });
-      if (!liff.isLoggedIn()) liff.login();
+    // Get referrer from URL (e.g., ?ref=Uxxxxxxxxxxxx)
+    const searchParams = new URLSearchParams(window.location.search);
+    const ref = searchParams.get('ref');
+    if (ref) setReferrer(ref);
 
-      const p = await liff.getProfile();
-      setProfile(p);
-
-      const url = new URL(window.location.href);
-      const ref = url.searchParams.get('ref') || '';
-      setReferrer(ref);
-    };
-    init();
-  }, []);
-
-  const getPhoneNumber = async () => {
-    try {
-      if (liff.isInClient()) {
-        if (liff.getOS() === "android" || liff.getOS() === "ios") {
-          try {
-            // Cast the result to our interface
-            const result = await liff.getProfilePlus() as ProfilePlus;
-            
-            if (result?.phoneNumber) {
-              setPhoneNumber(result.phoneNumber);
-            } else {
-              alert('ไม่พบเบอร์โทรศัพท์ในบัญชี LINE ของคุณ กรุณากรอกด้วยตนเอง');
-            }
-          } catch (error) {
-            console.error('Error getting phone number:', error);
-            alert('ไม่สามารถดึงเบอร์โทรศัพท์ได้ กรุณากรอกด้วยตนเอง');
-          }
-        } else {
-          alert('กรุณาใช้งานผ่านแอพ LINE เท่านั้น');
-        }
+    // Init LIFF
+    liff.init({ liffId: '2007552712-Ml60zkVe' }).then(() => {
+      if (!liff.isLoggedIn()) {
+        liff.login();
       } else {
-        alert('กรุณาใช้งานผ่านแอพ LINE เท่านั้น');
+        liff.getProfile().then(profile => {
+          setUserId(profile.userId);
+        });
       }
-    } catch (err) {
-      console.error('Error:', err);
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
-    }
-  };
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const nameInput = form.querySelector('[name="name"]') as HTMLInputElement;
-    const phoneInput = form.querySelector('[name="phone"]') as HTMLInputElement;
+    setMessage('⏳ กำลังส่งข้อมูล...');
 
-    const data = {
-      name: nameInput.value,
-      phone: phoneInput.value,
-      referrer,
-      userId: profile?.userId,
-    };
+    const formData = new FormData();
+    formData.append('userId', userId);
+    formData.append('referrer', referrer || '');
+    formData.append('name', name);
+    formData.append('address', address);
+    formData.append('lat', latLng?.lat.toString() || '');
+    formData.append('lng', latLng?.lng.toString() || '');
+    if (storeImage) formData.append('storeImage', storeImage);
+    if (idCardImage) formData.append('idCardImage', idCardImage);
 
-    await fetch('https://script.google.com/macros/s/AKfycby-gCj8HXTHCykYipyN4WAMQ_tD04GdHkOJXeK3cDJ1GfEQjXo1wgH5Q-otlDFpNMYA_A/exec', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+    try {
+      const res = await fetch('YOUR_GOOGLE_APPS_SCRIPT_ENDPOINT', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await res.json();
+      setMessage(result.message || '✅ บันทึกข้อมูลเรียบร้อยแล้ว');
+    } catch (err) {
+      setMessage('❌ เกิดข้อผิดพลาดในการส่งข้อมูล');
+    }
+  };
+
+  const handleMapClick = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      setLatLng({ lat, lng });
     });
+  };
 
-    alert('ลงทะเบียนสำเร็จ!');
-    form.reset();
+  const handleStoreImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setStoreImage(file);
+      setStoreImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleIdCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIdCardImage(file);
+      setIdCardPreview(URL.createObjectURL(file));
+    }
   };
 
   return (
-    <div style={{
-      maxWidth: '500px',
-      margin: '0 auto',
-      padding: '20px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <h2 style={{
-        fontSize: '24px',
-        textAlign: 'center',
-        color: '#333',
-        marginBottom: '24px'
-      }}>ลงทะเบียน</h2>
-
-      {profile && (
-        <div style={{
-          background: '#f5f5f5',
-          padding: '15px',
-          borderRadius: '8px',
-          marginBottom: '20px'
-        }}>
-          <p style={{ margin: '8px 0' }}><strong>LINE Display Name:</strong> {profile.displayName}</p>
-          <p style={{ margin: '8px 0' }}><strong>LINE User ID:</strong> {profile.userId}</p>
-        </div>
-      )}
-
-      <p style={{
-        background: '#e8f4fd',
-        padding: '12px',
-        borderRadius: '8px',
-        marginBottom: '20px'
-      }}><strong>รหัสผู้แนะนำ:</strong> {referrer}</p>
-
-      <form onSubmit={handleSubmit} style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px'
-      }}>
+    <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
+      <h2>📋 ลงทะเบียนร้านค้า</h2>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <input
-          name="name"
-          placeholder="ชื่อ-สกุล"
+          placeholder="🛍️ ชื่อร้านค้า"
+          value={name}
+          onChange={e => setName(e.target.value)}
           required
-          style={{
-            padding: '12px',
-            borderRadius: '8px',
-            border: '1px solid #ddd',
-            fontSize: '16px'
-          }}
         />
-        <div style={{ position: 'relative' }}>
-          <input
-            name="phone"
-            placeholder="เบอร์โทร"
-            required
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            style={{
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid #ddd',
-              fontSize: '16px',
-              width: '100%'
-            }}
-          />
-          <button
-            type="button"
-            onClick={getPhoneNumber}
-            style={{
-              position: 'absolute',
-              right: '8px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              padding: '6px 12px',
-              backgroundColor: '#00B900',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}
-          >
-            ดึงเบอร์จาก LINE
-          </button>
+        <textarea
+          placeholder="📦 ที่อยู่จัดส่ง"
+          value={address}
+          onChange={e => setAddress(e.target.value)}
+          rows={3}
+          required
+        />
+        <button type="button" onClick={handleMapClick}>📍 ใช้ตำแหน่งร้าน (ปักหมุด)</button>
+        {latLng && (
+          <p style={{ margin: 0, fontSize: '14px' }}>
+            ✅ ตำแหน่งร้าน: {latLng.lat}, {latLng.lng}
+          </p>
+        )}
+        <div>
+          <p>🖼️ รูปหน้าร้าน:</p>
+          <input type="file" accept="image/*" onChange={handleStoreImageChange} required />
+          {storeImagePreview && <img src={storeImagePreview} alt="store" width={150} />}
         </div>
-        <button
-          type="submit"
-          style={{
-            padding: '14px',
-            backgroundColor: '#00B900',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s'
-          }}
-        >
-          ลงทะเบียน
+        <div>
+          <p>🪪 รูปบัตรประชาชน:</p>
+          <input type="file" accept="image/*" onChange={handleIdCardChange} required />
+          {idCardPreview && <img src={idCardPreview} alt="idcard" width={150} />}
+        </div>
+        <button type="submit" style={{ backgroundColor: '#00b900', color: '#fff', padding: 10, border: 'none', borderRadius: 5 }}>
+          ✅ ส่งข้อมูลลงทะเบียน
         </button>
       </form>
+      <p style={{ marginTop: 20 }}>{message}</p>
     </div>
   );
 }

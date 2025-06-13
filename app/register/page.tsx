@@ -3,9 +3,16 @@
 import { useEffect, useState } from 'react';
 import liff from '@line/liff';
 
+// Add interface for ProfilePlus
+interface ProfilePlus {
+  email?: string;
+  phoneNumber?: string;
+}
+
 export default function RegisterPage() {
   const [profile, setProfile] = useState<any>(null);
   const [referrer, setReferrer] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   useEffect(() => {
     const init = async () => {
@@ -22,13 +29,44 @@ export default function RegisterPage() {
     init();
   }, []);
 
+  const getPhoneNumber = async () => {
+    try {
+      if (liff.isInClient()) {
+        if (liff.getOS() === "android" || liff.getOS() === "ios") {
+          try {
+            // Cast the result to our interface
+            const result = await liff.getProfilePlus() as ProfilePlus;
+            
+            if (result?.phoneNumber) {
+              setPhoneNumber(result.phoneNumber);
+            } else {
+              alert('ไม่พบเบอร์โทรศัพท์ในบัญชี LINE ของคุณ กรุณากรอกด้วยตนเอง');
+            }
+          } catch (error) {
+            console.error('Error getting phone number:', error);
+            alert('ไม่สามารถดึงเบอร์โทรศัพท์ได้ กรุณากรอกด้วยตนเอง');
+          }
+        } else {
+          alert('กรุณาใช้งานผ่านแอพ LINE เท่านั้น');
+        }
+      } else {
+        alert('กรุณาใช้งานผ่านแอพ LINE เท่านั้น');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
+    const nameInput = form.querySelector('[name="name"]') as HTMLInputElement;
+    const phoneInput = form.querySelector('[name="phone"]') as HTMLInputElement;
 
     const data = {
-      name: form.name.value,
-      phone: form.phone.value,
+      name: nameInput.value,
+      phone: phoneInput.value,
       referrer,
       userId: profile?.userId,
     };
@@ -92,17 +130,41 @@ export default function RegisterPage() {
             fontSize: '16px'
           }}
         />
-        <input
-          name="phone"
-          placeholder="เบอร์โทร"
-          required
-          style={{
-            padding: '12px',
-            borderRadius: '8px',
-            border: '1px solid #ddd',
-            fontSize: '16px'
-          }}
-        />
+        <div style={{ position: 'relative' }}>
+          <input
+            name="phone"
+            placeholder="เบอร์โทร"
+            required
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            style={{
+              padding: '12px',
+              borderRadius: '8px',
+              border: '1px solid #ddd',
+              fontSize: '16px',
+              width: '100%'
+            }}
+          />
+          <button
+            type="button"
+            onClick={getPhoneNumber}
+            style={{
+              position: 'absolute',
+              right: '8px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              padding: '6px 12px',
+              backgroundColor: '#00B900',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}
+          >
+            ดึงเบอร์จาก LINE
+          </button>
+        </div>
         <button
           type="submit"
           style={{

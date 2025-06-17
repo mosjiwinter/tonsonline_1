@@ -1,11 +1,10 @@
-// RegisterPage.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import liff from '@line/liff';
 import dynamic from 'next/dynamic';
 
-// ⭐ โหลด LeafletMap แบบ dynamic (ป้องกัน SSR error)
+// ⭐ Dynamic import ป้องกัน SSR error
 const Map = dynamic(() => import('./LeafletMap'), { ssr: false });
 
 interface ProfilePlus {
@@ -25,27 +24,47 @@ export default function RegisterPage() {
 
   useEffect(() => {
     const init = async () => {
-      await liff.init({ liffId: '2007552712-Ml60zkVe' });
-      if (!liff.isLoggedIn()) liff.login();
+      await liff.init({
+        liffId: '2007552712-Ml60zkVe',
+        withLoginOnExternalBrowser: true,
+      });
+
+      if (!liff.isLoggedIn()) {
+        liff.login({
+          scope: 'openid profile phone',
+          redirectUri: window.location.href,
+        });
+        return;
+      }
 
       const p = await liff.getProfile();
       setProfile(p);
 
       const ref = new URL(window.location.href).searchParams.get('ref') || '';
       setReferrer(ref);
+
+      // ดึงเบอร์ทันที (ถ้ามีสิทธิ์)
+      try {
+        const plus = (await liff.getProfilePlus()) as ProfilePlus;
+        if (plus.phoneNumber) {
+          setPhoneNumber(plus.phoneNumber);
+        }
+      } catch (err) {
+        console.warn('ไม่สามารถดึงเบอร์ได้:', err);
+      }
     };
     init();
   }, []);
 
   const getPhoneNumber = async () => {
     try {
-      const result = await liff.getProfilePlus() as ProfilePlus;
-      if (result?.phoneNumber) {
-        setPhoneNumber(result.phoneNumber);
+      const plus = (await liff.getProfilePlus()) as ProfilePlus;
+      if (plus.phoneNumber) {
+        setPhoneNumber(plus.phoneNumber);
       } else {
-        alert('ไม่พบเบอร์โทร กรุณากรอกเอง');
+        alert('ไม่พบเบอร์ กรุณากรอกเอง');
       }
-    } catch {
+    } catch (error) {
       alert('ไม่สามารถดึงเบอร์ได้ กรุณากรอกเอง');
     }
   };

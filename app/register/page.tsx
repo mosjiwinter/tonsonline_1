@@ -11,42 +11,13 @@ import {
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
-import { styled } from '@mui/material/styles';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import InputFileUpload from '../components/InputFileUpload';
+import React from 'react';
 
 const Map = dynamic(() => import('./LeafletMap'), { ssr: false });
 
 interface ProfilePlus {
   phoneNumber?: string;
-}
-
-const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
-  height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  whiteSpace: 'nowrap',
-  width: 1,
-});
-
-interface InputFileUploadProps {
-  label: string;
-  onChange: (file: File | null) => void;
-}
-
-function InputFileUpload({ label, onChange }: InputFileUploadProps) {
-  return (
-    <Button component="label" variant="contained" startIcon={<CloudUploadIcon />}>
-      {label}
-      <VisuallyHiddenInput
-        type="file"
-        onChange={(e) => onChange(e.target.files?.[0] || null)}
-      />
-    </Button>
-  );
 }
 
 export default function RegisterPage() {
@@ -118,12 +89,17 @@ export default function RegisterPage() {
     if (idCardImage) formData.append('idCardImage', idCardImage);
 
     try {
-      const res = await fetch('YOUR_GOOGLE_APPS_SCRIPT_ENDPOINT', {
+      const res = await fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec', {
         method: 'POST',
         body: formData,
       });
       const result = await res.json();
       setMessage(result.message || 'ลงทะเบียนสำเร็จ');
+
+      // ✅ ไปหน้า CMS หลังลงทะเบียนเสร็จ
+      setTimeout(() => {
+        window.location.href = '/cms'; // หรือ URL ของ CMS จริง
+      }, 1500);
     } catch (err) {
       setMessage('เกิดข้อผิดพลาด');
     } finally {

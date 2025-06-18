@@ -1,8 +1,10 @@
+// components/InputFileUpload.tsx
 'use client';
+
 import * as React from 'react';
-import { styled } from '@mui/material/styles';
-import Button from '@mui/material/Button';
+import { Button } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { styled } from '@mui/material/styles';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -16,13 +18,13 @@ const VisuallyHiddenInput = styled('input')({
   width: 1,
 });
 
-export default function InputFileUpload({
-  label,
-  onChange,
-}: {
+interface Props {
   label: string;
   onChange: (file: File | null) => void;
-}) {
+  accept?: string;
+}
+
+export default function InputFileUpload({ label, onChange, accept = 'image/*' }: Props) {
   return (
     <Button
       component="label"
@@ -32,8 +34,11 @@ export default function InputFileUpload({
       {label}
       <VisuallyHiddenInput
         type="file"
-        accept="image/*"
-        onChange={(e) => onChange(e.target.files?.[0] || null)}
+        accept={accept}
+        onChange={(e) => {
+          const file = e.target.files?.[0] || null;
+          onChange(file);
+        }}
       />
     </Button>
   );

@@ -3,6 +3,14 @@
 import { useEffect, useState } from 'react';
 import liff from '@line/liff';
 import dynamic from 'next/dynamic';
+import {
+  TextField,
+  Button,
+  Stack,
+  Typography,
+  InputLabel,
+  FormControl,
+} from '@mui/material';
 
 const Map = dynamic(() => import('./LeafletMap'), { ssr: false });
 
@@ -26,9 +34,7 @@ export default function RegisterPage() {
       await liff.init({ liffId: '2007552712-Ml60zkVe' });
 
       if (!liff.isLoggedIn()) {
-        liff.login({
-          redirectUri: window.location.href,
-        });
+        liff.login({ redirectUri: window.location.href });
         return;
       }
 
@@ -92,54 +98,91 @@ export default function RegisterPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
-      <h2>ลงทะเบียนร้านค้า</h2>
+      <Typography variant="h5" gutterBottom>
+        ลงทะเบียนร้านค้า
+      </Typography>
 
       {profile && (
-        <div>
-          <p><strong>LINE Name:</strong> {profile.displayName}</p>
-          <p><strong>LINE ID:</strong> {profile.userId}</p>
-        </div>
+        <Stack spacing={1}>
+          <Typography variant="body1"><strong>LINE Name:</strong> {profile.displayName}</Typography>
+          <Typography variant="body1"><strong>LINE ID:</strong> {profile.userId}</Typography>
+        </Stack>
       )}
-      <p><strong>รหัสผู้แนะนำ:</strong> {referrer}</p>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <input placeholder="ชื่อร้านค้า" value={storeName} onChange={e => setStoreName(e.target.value)} required />
-        <input placeholder="ที่อยู่จัดส่ง" value={address} onChange={e => setAddress(e.target.value)} required />
+      <Typography sx={{ mt: 2 }}><strong>รหัสผู้แนะนำ:</strong> {referrer}</Typography>
 
-        <div>
-          <input
-            placeholder="เบอร์โทร"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+      <form onSubmit={handleSubmit}>
+        <Stack spacing={2} mt={2}>
+          <TextField
+            label="ชื่อร้านค้า"
+            value={storeName}
+            onChange={(e) => setStoreName(e.target.value)}
             required
+            fullWidth
           />
-          <button type="button" onClick={getPhoneNumber}>📱 ดึงเบอร์จาก LINE</button>
-        </div>
+          <TextField
+            label="ที่อยู่จัดส่ง"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            required
+            fullWidth
+          />
 
-        <div>
-          <button type="button" onClick={getCurrentLocation}>📍 ใช้ GPS ปัจจุบัน</button>
-        </div>
+          <Stack direction="row" spacing={1}>
+            <TextField
+              label="เบอร์โทร"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              required
+              fullWidth
+            />
+            <Button variant="outlined" onClick={getPhoneNumber}>
+              📱 ดึงเบอร์
+            </Button>
+          </Stack>
 
-        <Map latLng={latLng} setLatLng={setLatLng} />
+          <Button variant="contained" onClick={getCurrentLocation}>
+            📍 ใช้ GPS ปัจจุบัน
+          </Button>
 
-        {latLng && <p>📌 ตำแหน่ง: {latLng.lat}, {latLng.lng}</p>}
+          <Map latLng={latLng} setLatLng={setLatLng} />
 
-        <label>
-          อัปโหลดรูปหน้าร้าน:
-          <input type="file" accept="image/*" onChange={e => setStoreImage(e.target.files?.[0] || null)} required />
-        </label>
+          {latLng && (
+            <Typography>📌 ตำแหน่ง: {latLng.lat}, {latLng.lng}</Typography>
+          )}
 
-        <label>
-          อัปโหลดรูปบัตรประชาชน:
-          <input type="file" accept="image/*" onChange={e => setIdCardImage(e.target.files?.[0] || null)} required />
-        </label>
+          <FormControl>
+            <InputLabel shrink>อัปโหลดรูปหน้าร้าน</InputLabel>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setStoreImage(e.target.files?.[0] || null)}
+              required
+            />
+          </FormControl>
 
-        <button type="submit" style={{ backgroundColor: '#00B900', color: '#fff', padding: 12, borderRadius: 6 }}>
-          ส่งข้อมูล
-        </button>
+          <FormControl>
+            <InputLabel shrink>อัปโหลดรูปบัตรประชาชน</InputLabel>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setIdCardImage(e.target.files?.[0] || null)}
+              required
+            />
+          </FormControl>
+
+          <Button
+            type="submit"
+            variant="contained"
+            color="success"
+            size="large"
+          >
+            ส่งข้อมูล
+          </Button>
+
+          {message && <Typography color="primary">{message}</Typography>}
+        </Stack>
       </form>
-
-      {message && <p>{message}</p>}
     </div>
   );
 }

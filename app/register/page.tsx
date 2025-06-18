@@ -5,17 +5,48 @@ import liff from '@line/liff';
 import dynamic from 'next/dynamic';
 import {
   TextField,
-  Button,
   Stack,
   Typography,
-  InputLabel,
-  FormControl,
+  Button,
 } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
+import SaveIcon from '@mui/icons-material/Save';
+import { styled } from '@mui/material/styles';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 const Map = dynamic(() => import('./LeafletMap'), { ssr: false });
 
 interface ProfilePlus {
   phoneNumber?: string;
+}
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
+
+interface InputFileUploadProps {
+  label: string;
+  onChange: (file: File | null) => void;
+}
+
+function InputFileUpload({ label, onChange }: InputFileUploadProps) {
+  return (
+    <Button component="label" variant="contained" startIcon={<CloudUploadIcon />}>
+      {label}
+      <VisuallyHiddenInput
+        type="file"
+        onChange={(e) => onChange(e.target.files?.[0] || null)}
+      />
+    </Button>
+  );
 }
 
 export default function RegisterPage() {
@@ -28,6 +59,7 @@ export default function RegisterPage() {
   const [storeImage, setStoreImage] = useState<File | null>(null);
   const [idCardImage, setIdCardImage] = useState<File | null>(null);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -69,6 +101,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     setMessage('กำลังส่งข้อมูล...');
 
     const formData = new FormData();
@@ -93,6 +126,8 @@ export default function RegisterPage() {
       setMessage(result.message || 'ลงทะเบียนสำเร็จ');
     } catch (err) {
       setMessage('เกิดข้อผิดพลาด');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,8 +139,8 @@ export default function RegisterPage() {
 
       {profile && (
         <Stack spacing={1}>
-          <Typography variant="body1"><strong>LINE Name:</strong> {profile.displayName}</Typography>
-          <Typography variant="body1"><strong>LINE ID:</strong> {profile.userId}</Typography>
+          <Typography><strong>LINE Name:</strong> {profile.displayName}</Typography>
+          <Typography><strong>LINE ID:</strong> {profile.userId}</Typography>
         </Stack>
       )}
 
@@ -127,7 +162,6 @@ export default function RegisterPage() {
             required
             fullWidth
           />
-
           <Stack direction="row" spacing={1}>
             <TextField
               label="เบอร์โทร"
@@ -151,34 +185,44 @@ export default function RegisterPage() {
             <Typography>📌 ตำแหน่ง: {latLng.lat}, {latLng.lng}</Typography>
           )}
 
-          <FormControl>
-            <InputLabel shrink>อัปโหลดรูปหน้าร้าน</InputLabel>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={e => setStoreImage(e.target.files?.[0] || null)}
-              required
-            />
-          </FormControl>
+          <Stack spacing={1}>
+            <Typography>อัปโหลดรูปหน้าร้าน</Typography>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <InputFileUpload
+                label="เลือกรูปหน้าร้าน"
+                onChange={setStoreImage}
+              />
+              <Typography variant="body2">
+                {storeImage ? storeImage.name : 'ยังไม่ได้เลือกรูป'}
+              </Typography>
+            </Stack>
+          </Stack>
 
-          <FormControl>
-            <InputLabel shrink>อัปโหลดรูปบัตรประชาชน</InputLabel>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={e => setIdCardImage(e.target.files?.[0] || null)}
-              required
-            />
-          </FormControl>
+          <Stack spacing={1}>
+            <Typography>อัปโหลดรูปบัตรประชาชน</Typography>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <InputFileUpload
+                label="เลือกรูปบัตร ปชช."
+                onChange={setIdCardImage}
+              />
+              <Typography variant="body2">
+                {idCardImage ? idCardImage.name : 'ยังไม่ได้เลือกรูป'}
+              </Typography>
+            </Stack>
+          </Stack>
 
-          <Button
+          <LoadingButton
             type="submit"
             variant="contained"
             color="success"
+            loading={loading}
+            loadingPosition="start"
+            startIcon={<SaveIcon />}
             size="large"
+            fullWidth
           >
             ส่งข้อมูล
-          </Button>
+          </LoadingButton>
 
           {message && <Typography color="primary">{message}</Typography>}
         </Stack>

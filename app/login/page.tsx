@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Container,
   TextField,
@@ -8,22 +8,44 @@ import {
   Typography,
   Box,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // ✅ เช็ก sessionStorage หากเคย login แล้ว ให้ redirect ทันที
+  useEffect(() => {
+    const isLoggedIn = sessionStorage.getItem('isStaffLoggedIn');
+    if (isLoggedIn === 'true') {
+      window.location.href = '/staff';
+    }
+
+    // ✅ เรียก LINE LIFF init
+    import('@line/liff').then((liff) => {
+      liff.default
+        .init({ liffId: '2007552712-Ml60zkVe' }) // 🔁 ใส่ LIFF ID ของคุณ
+        .then(() => {
+          if (!liff.default.isLoggedIn()) {
+            liff.default.login();
+          }
+        })
+        .catch((err) => console.error('LIFF init error:', err));
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
       const res = await fetch(
         'https://script.google.com/macros/s/AKfycbx6-3cFdNUM3j5PMnworjCIdygsqCVqElTL9sD47vftwJBF5mm0A-xrKn07ap7mFPzC/exec',
         {
-          
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
@@ -33,14 +55,16 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (data.success) {
-        localStorage.setItem('isStaffLoggedIn', 'true');
-        localStorage.setItem('staffUserId', data.userId);
+        sessionStorage.setItem('isStaffLoggedIn', 'true');
+        sessionStorage.setItem('staffUserId', data.userId);
         window.location.href = '/staff';
       } else {
         setError(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
       }
     } catch (err) {
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,8 +100,9 @@ export default function LoginPage() {
             type="submit"
             variant="contained"
             sx={{ mt: 2, backgroundColor: '#00b900', color: 'white' }}
+            disabled={loading}
           >
-            เข้าสู่ระบบ
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'เข้าสู่ระบบ'}
           </Button>
 
           {error && (

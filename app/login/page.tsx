@@ -107,8 +107,9 @@ export default function LoginPage() {
             variant="contained"
             sx={{ mt: 2, backgroundColor: '#00b900', color: 'white' }}
             disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'เข้าสู่ระบบ'}
+            {loading ? 'กำลังเข้าสู่ระบบ' : 'เข้าสู่ระบบ'}
           </Button>
 
           {error && (

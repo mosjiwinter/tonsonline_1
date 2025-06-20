@@ -1,6 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Alert,
+} from '@mui/material';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -12,17 +20,21 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const res = await fetch('https://script.google.com/macros/s/AKfycbx6-3cFdNUM3j5PMnworjCIdygsqCVqElTL9sD47vftwJBF5mm0A-xrKn07ap7mFPzC/exec', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+      const res = await fetch(
+        'https://script.google.com/macros/s/AKfycbx6-3cFdNUM3j5PMnworjCIdygsqCVqElTL9sD47vftwJBF5mm0A-xrKn07ap7mFPzC/exec',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        }
+      );
+
       const data = await res.json();
 
       if (data.success) {
         localStorage.setItem('isStaffLoggedIn', 'true');
         localStorage.setItem('staffUserId', data.userId);
-        window.location.href = '/staff'; // ไปหน้า staff
+        window.location.href = '/staff';
       } else {
         setError(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
       }
@@ -32,28 +44,48 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ maxWidth: 320, margin: 'auto', padding: 20 }}>
-      <h2>เข้าสู่ระบบสำหรับพนักงาน</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <input
-          type="text"
-          placeholder="ชื่อผู้ใช้"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="รหัสผ่าน"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit" style={{ padding: '10px', backgroundColor: '#00b900', color: 'white', border: 'none', borderRadius: 4 }}>
-          เข้าสู่ระบบ
-        </button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-      </form>
-    </div>
+    <Container maxWidth="xs">
+      <Box sx={{ mt: 8 }}>
+        <Typography variant="h5" component="h1" gutterBottom>
+          เข้าสู่ระบบสำหรับพนักงาน
+        </Typography>
+
+        <form onSubmit={handleSubmit} noValidate>
+          <TextField
+            fullWidth
+            label="ชื่อผู้ใช้"
+            margin="normal"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+
+          <TextField
+            fullWidth
+            label="รหัสผ่าน"
+            type="password"
+            margin="normal"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            sx={{ mt: 2, backgroundColor: '#00b900', color: 'white' }}
+          >
+            เข้าสู่ระบบ
+          </Button>
+
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+        </form>
+      </Box>
+    </Container>
   );
 }

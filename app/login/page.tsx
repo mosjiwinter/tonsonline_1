@@ -44,7 +44,7 @@ export default function LoginPage() {
 
     try {
       const res = await fetch(
-        'https://script.google.com/macros/s/AKfycbx6-3cFdNUM3j5PMnworjCIdygsqCVqElTL9sD47vftwJBF5mm0A-xrKn07ap7mFPzC/exec',
+        'https://script.google.com/macros/s/AKfycbyfFynjCr1210i8VR8_vondrJXajoxxbEcUvja5tknQ7h6Q8xLxQj35gYWkWHEARlnu/exec', // 🔁 ใส่ URL ของ Google Apps Script ที่ใช้ตรวจสอบ
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

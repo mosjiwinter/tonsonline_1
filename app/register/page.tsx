@@ -8,13 +8,27 @@ import {
   Stack,
   Typography,
   Button,
+  styled,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import InputFileUpload from '../components/InputFileUpload';
 import React from 'react';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 const Map = dynamic(() => import('./LeafletMap'), { ssr: false });
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
 
 interface ProfilePlus {
   phoneNumber?: string;
@@ -33,22 +47,38 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const init = async () => {
-      await liff.init({ liffId: '2007552712-Ml60zkVe' });
+  const init = async () => {
+    await liff.init({ liffId: '2007552712-Ml60zkVe' });
 
-      if (!liff.isLoggedIn()) {
-        liff.login({ redirectUri: window.location.href });
+    if (!liff.isLoggedIn()) {
+      liff.login({ redirectUri: window.location.href });
+      return;
+    }
+
+    const p = await liff.getProfile();
+    setProfile(p);
+
+    const ref = new URL(window.location.href).searchParams.get('ref') || '';
+    setReferrer(ref);
+
+    // ✅ เรียก API Google Apps Script เพื่อตรวจสอบว่าเคยลงทะเบียนหรือยัง
+    try {
+      const res = await fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?userId=${p.userId}`);
+      const result = await res.json();
+
+      if (result.registered) {
+        // ✅ ถ้าเคยลงทะเบียนแล้ว → ไปหน้า CMS ได้เลย
+        window.location.href = '/cms';
         return;
       }
+    } catch (err) {
+      console.error('Error checking registration:', err);
+      // ไม่ redirect กรณี error, ให้กรอกใหม่
+    }
+  };
 
-      const p = await liff.getProfile();
-      setProfile(p);
-
-      const ref = new URL(window.location.href).searchParams.get('ref') || '';
-      setReferrer(ref);
-    };
-    init();
-  }, []);
+  init();
+}, []);
 
   const getPhoneNumber = async () => {
     try {
@@ -164,10 +194,14 @@ export default function RegisterPage() {
           <Stack spacing={1}>
             <Typography>อัปโหลดรูปหน้าร้าน</Typography>
             <Stack direction="row" spacing={2} alignItems="center">
-              <InputFileUpload
-                label="เลือกรูปหน้าร้าน"
-                onChange={setStoreImage}
-              />
+              <Button component="label" variant="contained" startIcon={<CloudUploadIcon />}>
+                เลือกรูปหน้าร้าน
+                <VisuallyHiddenInput
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setStoreImage(e.target.files?.[0] || null)}
+                />
+              </Button>
               <Typography variant="body2">
                 {storeImage ? storeImage.name : 'ยังไม่ได้เลือกรูป'}
               </Typography>
@@ -177,10 +211,14 @@ export default function RegisterPage() {
           <Stack spacing={1}>
             <Typography>อัปโหลดรูปบัตรประชาชน</Typography>
             <Stack direction="row" spacing={2} alignItems="center">
-              <InputFileUpload
-                label="เลือกรูปบัตร ปชช."
-                onChange={setIdCardImage}
-              />
+              <Button component="label" variant="contained" startIcon={<CloudUploadIcon />}>
+                เลือกรูปบัตร ปชช.
+                <VisuallyHiddenInput
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setIdCardImage(e.target.files?.[0] || null)}
+                />
+              </Button>
               <Typography variant="body2">
                 {idCardImage ? idCardImage.name : 'ยังไม่ได้เลือกรูป'}
               </Typography>

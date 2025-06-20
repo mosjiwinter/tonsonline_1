@@ -25,26 +25,32 @@ export default function LoginPage() {
     }
 
     // ✅ เรียก LINE LIFF init
-    import('@line/liff').then((liff) => {
-      liff.default
-        .init({ liffId: '2007552712-Ml60zkVe' }) // 🔁 ใส่ LIFF ID ของคุณ
-        .then(() => {
-          if (!liff.default.isLoggedIn()) {
-            liff.default.login();
-          }
-        })
-        .catch((err) => console.error('LIFF init error:', err));
+    import('@line/liff').then(async (liff) => {
+      try {
+        await liff.default.init({ liffId: '2007552712-Ml60zkVe' }); // 🔁 ใส่ LIFF ID ของคุณ
+        if (!liff.default.isLoggedIn()) {
+          liff.default.login();
+        } else {
+          const profile = await liff.default.getProfile();
+          sessionStorage.setItem('lineDisplayName', profile.displayName);
+          sessionStorage.setItem('lineUserId', profile.userId);
+        }
+      } catch (err) {
+        console.error('LIFF init error:', err);
+      }
     });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+
     setError('');
     setLoading(true);
 
     try {
       const res = await fetch(
-        'https://script.google.com/macros/s/AKfycbyfFynjCr1210i8VR8_vondrJXajoxxbEcUvja5tknQ7h6Q8xLxQj35gYWkWHEARlnu/exec', // 🔁 ใส่ URL ของ Google Apps Script ที่ใช้ตรวจสอบ
+        'https://script.google.com/macros/s/AKfycbwIINPwMdviTyOyA0MYMeSCmSf76QXJarImg9w_jq4OG6s9DDlg51g5wA-6BUNavqqY/exec', // 🔁 URL Google Apps Script
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -75,7 +81,7 @@ export default function LoginPage() {
           เข้าสู่ระบบสำหรับพนักงาน
         </Typography>
 
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit} noValidate autoComplete="off">
           <TextField
             fullWidth
             label="ชื่อผู้ใช้"

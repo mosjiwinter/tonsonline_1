@@ -48,7 +48,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
   const init = async () => {
-    await liff.init({ liffId: '2007552712-Ml60zkVe' });
+    await liff.init({ liffId: 'NEXT_PUBLIC_LIFF_ID' });
 
     if (!liff.isLoggedIn()) {
       liff.login({ redirectUri: window.location.href });
@@ -68,7 +68,17 @@ export default function RegisterPage() {
 
       if (result.registered) {
         // ✅ ถ้าเคยลงทะเบียนแล้ว → ไปหน้า CMS ได้เลย
+        setMessage('คุณได้ลงทะเบียนแล้ว');
         window.location.href = '/cms';
+        
+        return;
+      }
+      else {
+        // ✅ ถ้ายังไม่เคยลงทะเบียน → ดึงเบอร์โทรและแสดงฟอร์ม
+        getPhoneNumber();
+        getCurrentLocation();
+        setMessage('กรุณากรอกข้อมูลร้านค้า');
+        window.location.href = '/register'; // หรือ URL ของหน้า register จริง
         return;
       }
     } catch (err) {

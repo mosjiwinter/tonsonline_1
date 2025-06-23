@@ -50,11 +50,12 @@ export default function LoginPage() {
 
     try {
       const res = await fetch(
-        'https://script.google.com/macros/s/AKfycbwIINPwMdviTyOyA0MYMeSCmSf76QXJarImg9w_jq4OG6s9DDlg51g5wA-6BUNavqqY/exec', // 🔁 URL Google Apps Script
+        'https://script.google.com/macros/s/AKfycbzi4sRQKTJ1tHdg_Y15X5KGVtRj31QEeEFJZSxvz0z_KnmebumQBWbZIdLxe_O8YiNp/exec',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
+
         }
       );
 
@@ -62,8 +63,15 @@ export default function LoginPage() {
 
       if (data.success) {
         sessionStorage.setItem('isStaffLoggedIn', 'true');
-        sessionStorage.setItem('staffUserId', data.userId);
-        window.location.href = '/staff';
+        sessionStorage.setItem('staffUserId', data.userId);    // จาก Google Sheet
+        sessionStorage.setItem('staffName', data.name || '');  // จาก Google Sheet
+        sessionStorage.setItem('staffRole', data.role || 'staff');
+        // หลัง login สำเร็จ:
+        if (data.role === 'admin') {
+          window.location.href = '/admin/dashboard';
+        } else {
+          window.location.href = '/staff';
+        }
       } else {
         setError(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
       }

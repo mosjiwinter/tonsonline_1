@@ -29,9 +29,8 @@ export default function LoginPage() {
         await liff.default.init({ liffId: '2007552712-Ml60zkVe' });
 
         if (!liff.default.isLoggedIn()) {
-          // ✅ เปลี่ยน redirectUri ไม่ให้มี query string
           liff.default.login({
-            redirectUri: window.location.origin + '/login',
+            redirectUri: window.location.href, // ⚠ ป้องกันกลับไปหน้าอื่น
           });
         } else {
           const profile = await liff.default.getProfile();

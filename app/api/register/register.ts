@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const idCardImageBase64 = idCardImageFile ? fs.readFileSync(idCardImageFile.filepath, 'base64') : '';
 
     // 📤 เตรียมส่งไป Google Apps Script
-    const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbyN4kzwkpMGYy_j1snkgy3BEB7CjIL4gLJ0iFt6hu4/dev/exec';
+    const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbyN4kzwkpMGYy_j1snkgy3BEB7CjIL4gLJ0iFt6hu4/dev';
 
     const res = await fetch(googleAppsScriptUrl, {
       method: 'POST',

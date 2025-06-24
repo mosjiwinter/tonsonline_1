@@ -75,29 +75,52 @@ export default function RegisterPage() {
     setLoading(true);
     setMessage('กำลังส่งข้อมูล...');
 
-    const formData = new FormData();
-    formData.append('userId', ''); // ไม่มี LIFF แล้ว ใส่ userId ว่างหรือจาก query ได้
-    formData.append('name', storeName);
-    formData.append('phone', phoneNumber);
-    formData.append('referrer', referrer);
-    formData.append('address', address);
-    formData.append('lat', latLng.lat.toString());
-    formData.append('lng', latLng.lng.toString());
-    formData.append('storeImage', storeImage);
-    formData.append('idCardImage', idCardImage);
-
     try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        body: formData,
+      const readFileAsBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            // ตัด prefix "data:image/jpeg;base64,..."
+            resolve(result.split(',')[1]);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
+      const storeImageBase64 = await readFileAsBase64(storeImage);
+      const idCardImageBase64 = await readFileAsBase64(idCardImage);
+
+      const payload = {
+        action: 'register',
+        userId: '', // ไม่มี LIFF แล้ว
+        name: storeName,
+        phone: phoneNumber,
+        referrer,
+        address,
+        lat: latLng.lat,
+        lng: latLng.lng,
+        storeImage: storeImageBase64,
+        idCardImage: idCardImageBase64,
+      };
+
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const result = await res.json();
-      showSnackbar(result.message || 'ส่งข้อมูลสำเร็จ ✅', 'success');
-      setTimeout(() => window.location.href = '/cms', 1500);
+      showSnackbar(result.message || "ส่งข้อมูลสำเร็จ ✅", "success");
+      setTimeout(() => window.location.href = "/cms", 1500);
     } catch (err) {
       console.error(err);
-      showSnackbar('เกิดข้อผิดพลาดในการส่งข้อมูล ❌', 'error');
+      showSnackbar("เกิดข้อผิดพลาดในการส่งข้อมูล ❌", "error");
     } finally {
       setLoading(false);
     }

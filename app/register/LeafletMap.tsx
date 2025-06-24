@@ -1,40 +1,33 @@
-'use client';
-
+// LeafletMap.tsx
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
-const DefaultIcon = new Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
+const LeafletMap = ({ latLng, setLatLng }: {
+  latLng: { lat: number; lng: number };
+  setLatLng: (latlng: { lat: number; lng: number }) => void;
+}) => {
+  const position = latLng || { lat: 13.736717, lng: 100.523186 };
 
-interface Props {
-  latLng: { lat: number; lng: number } | null;
-  setLatLng: (pos: { lat: number; lng: number }) => void;
-}
-
-function LocationMarker({ setLatLng }: { setLatLng: (latlng: { lat: number; lng: number }) => void }) {
-  useMapEvents({
-    click(e) {
-      setLatLng({ lat: e.latlng.lat, lng: e.latlng.lng });
-    },
-  });
-  return null;
-}
-
-export default function LeafletMap({ latLng, setLatLng }: Props) {
-  const center = latLng || { lat: 13.7563, lng: 100.5018 };
+  function LocationPicker() {
+    useMapEvents({
+      click(e) {
+        setLatLng({ lat: e.latlng.lat, lng: e.latlng.lng });
+      },
+    });
+    return null;
+  }
 
   return (
-    <MapContainer center={center} zoom={latLng ? 16 : 6} style={{ height: 300, width: '100%' }}>
+    <MapContainer center={position} zoom={16} style={{ height: '300px', width: '100%' }}>
       <TileLayer
-        attribution='&copy; OpenStreetMap contributors'
+        attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {latLng && <Marker position={[latLng.lat, latLng.lng]} icon={DefaultIcon} />}
-      <LocationMarker setLatLng={setLatLng} />
+      <Marker position={position} />
+      <LocationPicker />
     </MapContainer>
   );
-}
+};
+
+export default LeafletMap;

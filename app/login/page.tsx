@@ -18,29 +18,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // ตรวจสอบ sessionStorage ว่ามีการล็อกอินอยู่หรือไม่
     const isLoggedIn = sessionStorage.getItem('isStaffLoggedIn');
     if (isLoggedIn === 'true') {
       window.location.href = '/staff';
-      return;
     }
-
-    import('@line/liff').then(async (liff) => {
-      try {
-        await liff.default.init({ liffId: '2007552712-Ml60zkVe' });
-
-        if (!liff.default.isLoggedIn()) {
-          liff.default.login({
-            redirectUri: window.location.href, // ⚠ ป้องกันกลับไปหน้าอื่น
-          });
-        } else {
-          const profile = await liff.default.getProfile();
-          sessionStorage.setItem('lineDisplayName', profile.displayName);
-          sessionStorage.setItem('lineUserId', profile.userId);
-        }
-      } catch (err) {
-        console.error('LIFF init error:', err);
-      }
-    });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

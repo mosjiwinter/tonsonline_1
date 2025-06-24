@@ -48,7 +48,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
   const init = async () => {
-    await liff.init({ liffId: 'NEXT_PUBLIC_LIFF_ID' });
+    await liff.init({ liffId: '2007552712-Ml60zkVe' });
 
     if (!liff.isLoggedIn()) {
       liff.login({ redirectUri: window.location.href });

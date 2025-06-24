@@ -12,7 +12,6 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import React from 'react';
@@ -279,18 +278,16 @@ export default function RegisterPage() {
             </Stack>
           </Stack>
 
-          <LoadingButton
+          <Button
             type="submit"
             variant="contained"
             color="success"
-            loading={loading}
-            loadingPosition="start"
             startIcon={<SaveIcon />}
-            size="large"
             fullWidth
+            disabled={loading}
           >
-            ส่งข้อมูล
-          </LoadingButton>
+            {loading ? 'กำลังส่งข้อมูล...' : 'ส่งข้อมูล'}
+          </Button>
 
           {message && <Typography color="primary">{message}</Typography>}
         </Stack>

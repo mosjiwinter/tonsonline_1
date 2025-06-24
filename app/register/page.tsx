@@ -131,43 +131,64 @@ export default function RegisterPage() {
     init();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage('กำลังส่งข้อมูล...');
+const toBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 
-    const formData = new FormData();
-    formData.append('userId', profile?.userId || '');
-    formData.append('name', storeName);
-    formData.append('phone', phoneNumber);
-    formData.append('referrer', referrer);
-    formData.append('address', address);
-    if (latLng) {
-      formData.append('lat', latLng.lat.toString());
-      formData.append('lng', latLng.lng.toString());
-    }
-    if (storeImage) formData.append('storeImage', storeImage);
-    if (idCardImage) formData.append('idCardImage', idCardImage);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage('กำลังส่งข้อมูล...');
 
-    try {
-      const res = await fetch('https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec', {
-        method: 'POST',
-        body: formData,
-      });
-      const result = await res.json();
-      setMessage(result.message || 'ลงทะเบียนสำเร็จ');
-      showSnackbar('ส่งข้อมูลสำเร็จ ✅', 'success');
-      setTimeout(() => {
-        window.location.href = '/cms';
-      }, 1500);
-    } catch (err) {
-      console.error(err);
-      setMessage('เกิดข้อผิดพลาด');
-      showSnackbar('เกิดข้อผิดพลาดในการส่งข้อมูล ❌', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const storeImageBase64 = storeImage ? await toBase64(storeImage) : '';
+    const idCardImageBase64 = idCardImage ? await toBase64(idCardImage) : '';
+
+    const payload = {
+      action: 'register',
+      userId: profile?.userId || '',
+      name: storeName,
+      phone: phoneNumber,
+      referrer,
+      staffName: referrer, // สามารถแก้เป็นชื่อพนักงานจริงได้หากมี
+      storeName,
+      address,
+      lat: latLng?.lat || '',
+      lng: latLng?.lng || '',
+      storeImage: storeImageBase64,
+      idCardImage: idCardImageBase64,
+    };
+
+    const res = await fetch('https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await res.json();
+    setMessage(result.message || 'ลงทะเบียนสำเร็จ');
+    showSnackbar('ส่งข้อมูลสำเร็จ ✅', 'success');
+    setTimeout(() => {
+      window.location.href = '/cms';
+    }, 1500);
+  } catch (err) {
+    console.error(err);
+    setMessage('เกิดข้อผิดพลาด');
+    showSnackbar('เกิดข้อผิดพลาดในการส่งข้อมูล ❌', 'error');
+  } finally {
+    setLoading(false);
+  }
+};
+  if (!profile) {
+    return <Typography>กำลังโหลดข้อมูล...</Typography>;
+  }
 
   return (
     <div style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>

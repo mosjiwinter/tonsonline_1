@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import { useEffect, useState } from 'react';
 import {
@@ -18,28 +18,31 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   // ✅ เช็ก sessionStorage หากเคย login แล้ว ให้ redirect ทันที
-  useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem('isStaffLoggedIn');
-    if (isLoggedIn === 'true') {
-      window.location.href = '/staff';
-    }
+useEffect(() => {
+  const isLoggedIn = sessionStorage.getItem('isStaffLoggedIn');
+  if (isLoggedIn === 'true') {
+    window.location.href = '/staff';
+    return;
+  }
 
-    // ✅ เรียก LINE LIFF init
-    import('@line/liff').then(async (liff) => {
-      try {
-        await liff.default.init({ liffId: '2007552712-Ml60zkVe' }); // 🔁 ใส่ LIFF ID ของคุณ
-        if (!liff.default.isLoggedIn()) {
-          liff.default.login();
-        } else {
-          const profile = await liff.default.getProfile();
-          sessionStorage.setItem('lineDisplayName', profile.displayName);
-          sessionStorage.setItem('lineUserId', profile.userId);
-        }
-      } catch (err) {
-        console.error('LIFF init error:', err);
+  import('@line/liff').then(async (liff) => {
+    try {
+      await liff.default.init({ liffId: '2007552712-Ml60zkVe' });
+
+      if (!liff.default.isLoggedIn()) {
+        liff.default.login({
+          redirectUri: window.location.href, // ⚠ ป้องกันกลับไปหน้าอื่น
+        });
+      } else {
+        const profile = await liff.default.getProfile();
+        sessionStorage.setItem('lineDisplayName', profile.displayName);
+        sessionStorage.setItem('lineUserId', profile.userId);
       }
-    });
-  }, []);
+    } catch (err) {
+      console.error('LIFF init error:', err);
+    }
+  });
+}, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

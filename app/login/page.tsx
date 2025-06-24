@@ -50,7 +50,7 @@ export default function LoginPage() {
 
     try {
       const res = await fetch(
-        'https://script.google.com/macros/s/AKfycbybbrJYXTslldzWjzjUOqLxXgG3ojB8YUsrRWktgPcUeyd_3aK8i1n5AEZUidMQonDL/exec', // 🔁 ใส่ URL ของ Google Apps Script ที่ใช้ตรวจสอบการ login
+        'https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec', // 🔁 ใส่ URL ของ Google Apps Script ที่ใช้ตรวจสอบการ login
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

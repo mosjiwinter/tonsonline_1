@@ -63,14 +63,14 @@ export default function RegisterPage() {
 
     // ✅ เรียก API Google Apps Script เพื่อตรวจสอบว่าเคยลงทะเบียนหรือยัง
     try {
-      const res = await fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?userId=${p.userId}`);
+      const res = await fetch(`https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec?userId=${p.userId}`);
       const result = await res.json();
 
       if (result.registered) {
         // ✅ ถ้าเคยลงทะเบียนแล้ว → ไปหน้า CMS ได้เลย
         setMessage('คุณได้ลงทะเบียนแล้ว');
         window.location.href = '/cms';
-        
+
         return;
       }
       else {
@@ -129,7 +129,7 @@ export default function RegisterPage() {
     if (idCardImage) formData.append('idCardImage', idCardImage);
 
     try {
-      const res = await fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec', {
+      const res = await fetch('https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec', {
         method: 'POST',
         body: formData,
       });

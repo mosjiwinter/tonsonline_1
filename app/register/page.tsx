@@ -167,7 +167,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   if (idCardImage) formData.append('idCardImage', idCardImage);
 
   try {
-    const res = await fetch('https://script.google.com/macros/s/.../exec', {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec', {
       method: 'POST',
       body: formData,
     });

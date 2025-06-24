@@ -74,7 +74,7 @@ export default function RegisterPage() {
       const ref = new URL(window.location.href).searchParams.get('ref') || '';
 
       try {
-        const res = await fetch(`/api/check-register/check_route_register.js?userId=${p.userId}`);
+        const res = await fetch(`/api/check-register?userId=${p.userId}`);
         const result = await res.json();
 
         if (result.registered) {

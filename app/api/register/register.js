@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   try {
     const formData = req.body;
 
-    const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec';
+    const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbyN4kzwkpMGYy_j1snkgy3BEB7CjIL4gLJ0iFt6hu4/dev/exec';
 
     const response = await fetch(googleAppsScriptUrl, {
       method: 'POST',

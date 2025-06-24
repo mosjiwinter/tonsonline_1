@@ -33,14 +33,11 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        'https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        }
-      );
+      const res = await fetch('/api/login/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'test', password: '123456' }),
+      });
 
       const data = await res.json();
 

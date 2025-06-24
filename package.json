@@ -17,6 +17,7 @@
     "@mui/lab": "^7.0.0-beta.13",
     "@mui/material": "^7.1.1",
     "@react-google-maps/api": "^2.20.6",
+    "@types/node-fetch": "^2.6.12",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "leaflet": "^1.9.4",

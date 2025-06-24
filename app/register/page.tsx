@@ -9,12 +9,13 @@ import {
   Typography,
   Button,
   styled,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
-import InputFileUpload from '../components/InputFileUpload';
-import React from 'react';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import React from 'react';
 
 const Map = dynamic(() => import('./LeafletMap'), { ssr: false });
 
@@ -46,69 +47,90 @@ export default function RegisterPage() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Snackbar
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
+    open: false,
+    message: '',
+    severity: 'info',
+  });
+
+  const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' = 'info') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
   useEffect(() => {
-  const init = async () => {
-    await liff.init({ liffId: '2007552712-Ml60zkVe' });
+    const init = async () => {
+      await liff.init({ liffId: '2007552712-Ml60zkVe' });
 
-    if (!liff.isLoggedIn()) {
-      liff.login({ redirectUri: window.location.href });
-      return;
-    }
-
-    const p = await liff.getProfile();
-    setProfile(p);
-
-    const ref = new URL(window.location.href).searchParams.get('ref') || '';
-    setReferrer(ref);
-
-    // ✅ เรียก API Google Apps Script เพื่อตรวจสอบว่าเคยลงทะเบียนหรือยัง
-    try {
-      const res = await fetch(`https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec?userId=${p.userId}`);
-      const result = await res.json();
-
-      if (result.registered) {
-        // ✅ ถ้าเคยลงทะเบียนแล้ว → ไปหน้า CMS ได้เลย
-        setMessage('คุณได้ลงทะเบียนแล้ว');
-        window.location.href = '/cms';
-
+      if (!liff.isLoggedIn()) {
+        liff.login({ redirectUri: window.location.href });
         return;
       }
-      else {
-        // ✅ ถ้ายังไม่เคยลงทะเบียน → ดึงเบอร์โทรและแสดงฟอร์ม
-        getPhoneNumber();
-        getCurrentLocation();
-        setMessage('กรุณากรอกข้อมูลร้านค้า');
-        window.location.href = '/register'; // หรือ URL ของหน้า register จริง
-        return;
+
+      const p = await liff.getProfile();
+      const ref = new URL(window.location.href).searchParams.get('ref') || '';
+
+      try {
+        const res = await fetch(`https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec?userId=${p.userId}`);
+        const result = await res.json();
+
+        if (result.registered) {
+          setMessage('คุณได้ลงทะเบียนแล้ว');
+          window.location.href = '/cms';
+          return;
+        } else {
+          // ✅ เคลียร์และเตรียมฟอร์ม
+          setMessage('กำลังเตรียมฟอร์ม...');
+          setLoading(true);
+          setReferrer(ref);
+          setStoreName(p.displayName || '');
+          setAddress('');
+          setLatLng(null);
+          setStoreImage(null);
+          setIdCardImage(null);
+          setPhoneNumber('');
+          setProfile(p);
+
+          // ✅ ดึงเบอร์
+          try {
+            const plus = await liff.getProfilePlus() as ProfilePlus;
+            if (plus?.phoneNumber) {
+              setPhoneNumber(plus.phoneNumber);
+              showSnackbar('ดึงเบอร์โทรจาก LINE สำเร็จ ✅', 'success');
+            } else {
+              showSnackbar('ไม่พบเบอร์โทร กรุณากรอกเอง', 'info');
+            }
+          } catch (err) {
+            console.error(err);
+            showSnackbar('ไม่สามารถดึงเบอร์ได้ กรุณากรอกเอง', 'error');
+          }
+
+          // ✅ ดึงพิกัด GPS
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              setLatLng({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            },
+            (err) => {
+              console.error(err);
+              showSnackbar('ไม่สามารถดึงพิกัดได้ กรุณาอนุญาต GPS หรือระบุตำแหน่งเอง', 'error');
+            }
+          );
+
+          setMessage('กรุณากรอกข้อมูลร้านค้า');
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Error checking registration:', err);
+        showSnackbar('เกิดข้อผิดพลาดในการโหลดข้อมูลลงทะเบียน', 'error');
       }
-    } catch (err) {
-      console.error('Error checking registration:', err);
-      // ไม่ redirect กรณี error, ให้กรอกใหม่
-    }
-  };
+    };
 
-  init();
-}, []);
-
-  const getPhoneNumber = async () => {
-    try {
-      const result = await liff.getProfilePlus() as ProfilePlus;
-      if (result?.phoneNumber) {
-        setPhoneNumber(result.phoneNumber);
-      } else {
-        alert('ไม่พบเบอร์โทร กรุณากรอกเอง');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('ไม่สามารถดึงเบอร์ได้ กรุณากรอกเอง');
-    }
-  };
-
-  const getCurrentLocation = () => {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      setLatLng({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-    });
-  };
+    init();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,13 +157,14 @@ export default function RegisterPage() {
       });
       const result = await res.json();
       setMessage(result.message || 'ลงทะเบียนสำเร็จ');
-
-      // ✅ ไปหน้า CMS หลังลงทะเบียนเสร็จ
+      showSnackbar('ส่งข้อมูลสำเร็จ ✅', 'success');
       setTimeout(() => {
-        window.location.href = '/cms'; // หรือ URL ของ CMS จริง
+        window.location.href = '/cms';
       }, 1500);
     } catch (err) {
+      console.error(err);
       setMessage('เกิดข้อผิดพลาด');
+      showSnackbar('เกิดข้อผิดพลาดในการส่งข้อมูล ❌', 'error');
     } finally {
       setLoading(false);
     }
@@ -185,21 +208,42 @@ export default function RegisterPage() {
               onChange={(e) => setPhoneNumber(e.target.value)}
               required
               fullWidth
+              helperText="หากไม่มีเบอร์จาก LINE ให้กรอกเอง"
             />
-            <Button variant="outlined" onClick={getPhoneNumber}>
+            <Button variant="outlined" onClick={() => {
+              (async () => {
+                try {
+                  const res: any = await liff.getProfilePlus();
+                  if (res?.phoneNumber) {
+                    setPhoneNumber(res.phoneNumber);
+                    showSnackbar('ดึงเบอร์โทรสำเร็จ ✅', 'success');
+                  } else {
+                    showSnackbar('ไม่พบเบอร์ กรุณากรอกเอง', 'info');
+                  }
+                } catch {
+                  showSnackbar('เกิดข้อผิดพลาดในการดึงเบอร์', 'error');
+                }
+              })();
+            }}>
               📱 ดึงเบอร์
             </Button>
           </Stack>
 
-          <Button variant="contained" onClick={getCurrentLocation}>
+          <Button variant="contained" onClick={() => {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                setLatLng({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+              },
+              (err) => {
+                showSnackbar('ไม่สามารถดึงพิกัดได้', 'error');
+              }
+            );
+          }}>
             📍 ใช้ GPS ปัจจุบัน
           </Button>
 
           <Map latLng={latLng} setLatLng={setLatLng} />
-
-          {latLng && (
-            <Typography>📌 ตำแหน่ง: {latLng.lat}, {latLng.lng}</Typography>
-          )}
+          {latLng && <Typography>📌 ตำแหน่ง: {latLng.lat}, {latLng.lng}</Typography>}
 
           <Stack spacing={1}>
             <Typography>อัปโหลดรูปหน้าร้าน</Typography>
@@ -251,6 +295,18 @@ export default function RegisterPage() {
           {message && <Typography color="primary">{message}</Typography>}
         </Stack>
       </form>
+
+      {/* ✅ Snackbar แจ้งเตือน */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

@@ -23,7 +23,7 @@ export default function AdminDashboard() {
     const [filterMonth, setFilterMonth] = useState('');
 
     const fetchData = () => {
-        let url = 'https://script.google.com/macros/s/xxxxxxxxxxx/exec';
+        let url = 'https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec';
         const query: string[] = [];
         if (filterDate) query.push(`date=${filterDate}`);
         if (filterMonth) query.push(`month=${filterMonth}`);

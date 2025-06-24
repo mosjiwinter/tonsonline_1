@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import {
@@ -17,32 +17,32 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // ✅ เช็ก sessionStorage หากเคย login แล้ว ให้ redirect ทันที
-useEffect(() => {
-  const isLoggedIn = sessionStorage.getItem('isStaffLoggedIn');
-  if (isLoggedIn === 'true') {
-    window.location.href = '/staff';
-    return;
-  }
-
-  import('@line/liff').then(async (liff) => {
-    try {
-      await liff.default.init({ liffId: '2007552712-Ml60zkVe' });
-
-      if (!liff.default.isLoggedIn()) {
-        liff.default.login({
-          redirectUri: window.location.href, // ⚠ ป้องกันกลับไปหน้าอื่น
-        });
-      } else {
-        const profile = await liff.default.getProfile();
-        sessionStorage.setItem('lineDisplayName', profile.displayName);
-        sessionStorage.setItem('lineUserId', profile.userId);
-      }
-    } catch (err) {
-      console.error('LIFF init error:', err);
+  useEffect(() => {
+    const isLoggedIn = sessionStorage.getItem('isStaffLoggedIn');
+    if (isLoggedIn === 'true') {
+      window.location.href = '/staff';
+      return;
     }
-  });
-}, []);
+
+    import('@line/liff').then(async (liff) => {
+      try {
+        await liff.default.init({ liffId: '2007552712-Ml60zkVe' });
+
+        if (!liff.default.isLoggedIn()) {
+          // ✅ เปลี่ยน redirectUri ไม่ให้มี query string
+          liff.default.login({
+            redirectUri: window.location.origin + '/login',
+          });
+        } else {
+          const profile = await liff.default.getProfile();
+          sessionStorage.setItem('lineDisplayName', profile.displayName);
+          sessionStorage.setItem('lineUserId', profile.userId);
+        }
+      } catch (err) {
+        console.error('LIFF init error:', err);
+      }
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +53,11 @@ useEffect(() => {
 
     try {
       const res = await fetch(
-        'https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec', // 🔁 ใส่ URL ของ Google Apps Script ที่ใช้ตรวจสอบการ login
+        'https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
-
         }
       );
 
@@ -66,10 +65,10 @@ useEffect(() => {
 
       if (data.success) {
         sessionStorage.setItem('isStaffLoggedIn', 'true');
-        sessionStorage.setItem('staffUserId', data.userId);    // จาก Google Sheet
-        sessionStorage.setItem('staffName', data.name || '');  // จาก Google Sheet
+        sessionStorage.setItem('staffUserId', data.userId);
+        sessionStorage.setItem('staffName', data.name || '');
         sessionStorage.setItem('staffRole', data.role || 'staff');
-        // หลัง login สำเร็จ:
+
         if (data.role === 'admin') {
           window.location.href = '/admin/dashboard';
         } else {

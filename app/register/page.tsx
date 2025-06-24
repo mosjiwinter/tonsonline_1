@@ -74,7 +74,7 @@ export default function RegisterPage() {
       const ref = new URL(window.location.href).searchParams.get('ref') || '';
 
       try {
-        const res = await fetch(`https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec?userId=${p.userId}`);
+        const res = await fetch(`/api/check-register?userId=${p.userId}`);
         const result = await res.json();
 
         if (result.registered) {
@@ -93,7 +93,6 @@ export default function RegisterPage() {
           setIdCardImage(null);
           setPhoneNumber('');
           setProfile(p);
-
           // ✅ ดึงเบอร์
           try {
             const plus = await liff.getProfilePlus() as ProfilePlus;
@@ -131,56 +130,58 @@ export default function RegisterPage() {
     init();
   }, []);
 
-// 1. อ่านไฟล์เป็น base64
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(',')[1]); // ตัด prefix "data:image/png;base64,"
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  // ✴️ ตรวจสอบค่าที่จำเป็นก่อนส่ง
-  if (!storeName || !address || !latLng || !storeImage || !idCardImage || !phoneNumber) {
-    showSnackbar('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
-    return;
-  }
-
-  setLoading(true);
-  setMessage('กำลังส่งข้อมูล...');
-
-  const formData = new FormData();
-  formData.append('userId', profile?.userId || '');
-  formData.append('name', storeName);
-  formData.append('phone', phoneNumber);
-  formData.append('referrer', referrer);
-  formData.append('address', address);
-  if (latLng) {
-    formData.append('lat', latLng.lat.toString());
-    formData.append('lng', latLng.lng.toString());
-  }
-  if (storeImage) formData.append('storeImage', storeImage);
-  if (idCardImage) formData.append('idCardImage', idCardImage);
-
-  try {
-    const res = await fetch('https://script.google.com/macros/s/AKfycbyW36T8ScV4o92bHSb_RslFJWxDlDnWiUOags0UgbgwSvmMocN06hCHPWTsj07Zp9jA/exec', {
-      method: 'POST',
-      body: formData,
+  // 1. อ่านไฟล์เป็น base64
+  function readFileAsBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(',')[1]); // ตัด prefix "data:image/png;base64,"
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
-    const result = await res.json();
-    showSnackbar(result.message || 'ส่งข้อมูลสำเร็จ ✅', 'success');
-    setTimeout(() => window.location.href = '/cms', 1500);
-  } catch (err) {
-    console.error(err);
-    showSnackbar('เกิดข้อผิดพลาดในการส่งข้อมูล ❌', 'error');
-  } finally {
-    setLoading(false);
   }
-};
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!storeName || !address || !latLng || !storeImage || !idCardImage || !phoneNumber) {
+      showSnackbar('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+      return;
+    }
+
+    setLoading(true);
+    setMessage('กำลังส่งข้อมูล...');
+
+    const formData = new FormData();
+    formData.append('userId', profile?.userId || '');
+    formData.append('name', storeName);
+    formData.append('phone', phoneNumber);
+    formData.append('referrer', referrer);
+    formData.append('address', address);
+    if (latLng) {
+      formData.append('lat', latLng.lat.toString());
+      formData.append('lng', latLng.lng.toString());
+    }
+    if (storeImage) formData.append('storeImage', storeImage);
+    if (idCardImage) formData.append('idCardImage', idCardImage);
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await res.json();
+      showSnackbar(result.message || 'ส่งข้อมูลสำเร็จ ✅', 'success');
+      setTimeout(() => window.location.href = '/cms', 1500);
+    } catch (err) {
+      console.error(err);
+      showSnackbar('เกิดข้อผิดพลาดในการส่งข้อมูล ❌', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   return (
     <div style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>

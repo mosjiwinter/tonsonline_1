@@ -124,7 +124,7 @@ export default function RegisterPage() {
             📍 ใช้ GPS ปัจจุบัน
           </Button>
 
-          <Map latLng={latLng} setLatLng={setLatLng} />
+          <Map latLng={latLng ?? { lat: 0, lng: 0 }} setLatLng={setLatLng} />
           {latLng && <Typography>📌 ตำแหน่ง: {latLng.lat}, {latLng.lng}</Typography>}
 
           <Stack spacing={1}>
